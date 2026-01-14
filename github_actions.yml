@@ -1,0 +1,77 @@
+name: Build Spring Boot JAR
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - run: chmod +x gradlew
+      - run: ./gradlew clean bootJar
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spring-app
+          path: build/libs/*.jar
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: spring-app
+          path: ./artifacts
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "./artifacts/*.jar"
+          target: "/home/ubuntu/spring/ApiEjemplo2026/build/libs/"
+      - name: DeployEC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: >-
+            set -e && 
+            APP_DIR=/home/ubuntu/spring/ApiEjemplo2026 && 
+            cd $APP_DIR && 
+            
+            echo "Actualizar código en servidor..." && 
+            git pull origin main && 
+            
+            echo "Construir imagen Spring Boot..." && 
+            podman build -t springapiejemplo:1.0 . && 
+            
+            echo "Parar contenedor Spring si existe..." && 
+            podman rm -f springapp || true && 
+            
+            echo "Levantar contenedor MariaDB..." && 
+            podman stop mariadb_spring && 
+            podman start mariadb_spring && 
+            
+            echo "Esperando a arrancar MariaDB..." && 
+            sleep 5 && 
+            
+            echo "Levantar contenedor Spring Boot..." && 
+            podman run -p 8080:8080 --network host  --name springapp -d -t springapiejemplo:1.0
