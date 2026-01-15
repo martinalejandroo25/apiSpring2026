@@ -44,7 +44,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           source: "./artifacts/*.jar"
-          target: "/home/ubuntu/spring/ApiEjemplo2026/build/libs/"
+          target: "/home/ubuntu/spring/apiEjemplo2026/build/libs/"
       - name: DeployEC2
         uses: appleboy/ssh-action@v1.0.3
         with:
