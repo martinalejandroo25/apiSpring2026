@@ -11,5 +11,5 @@ import java.util.Optional;
 public interface TaskRepository extends JpaRepository<Task, Long> {
     Optional<Task> findByTitle(String title);
     List<Task> findAllByOrderByTitleAsc();
-    List<Task> findAllByOrderByTitleAsc();
+    List<Task> findAllByOrderByTitleDesc();
 }
