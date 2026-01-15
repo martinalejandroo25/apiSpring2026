@@ -17,6 +17,7 @@ public interface TaskService {
 
     //Retrieve / Read
     List<Task> findAll();
+    List<Task> findAllByOrderByTitle(String order);
     Optional<Task> findById(Long id);
     Optional<Task> findByTitle(String title);
 
