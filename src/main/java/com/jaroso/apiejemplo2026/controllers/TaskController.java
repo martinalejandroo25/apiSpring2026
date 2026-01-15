@@ -40,7 +40,7 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.CREATED).body(taskService.saveTask(task));
     }
 
-    @PutMapping
+    @PutMapping("/tasks")
     public ResponseEntity<Task> updateTask(@RequestBody Task task){
         return ResponseEntity.ok(taskService.saveTask(task));
     }
